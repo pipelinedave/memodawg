@@ -15,8 +15,11 @@ jobs:
       with:
         go-version: 1.17
 
-    - name: Test
-      run: go test ./...
+    - name: Test api
+      run: go test ./api
+
+    - name: Test frontend
+      run: go test ./frontend
 
     - name: Notify via Gotify if failed
       if: failure()
