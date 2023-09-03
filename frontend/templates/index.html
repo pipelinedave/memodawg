@@ -1,0 +1,21 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Transcription Service</title>
+</head>
+<body>
+    <h1>Upload Audio for Transcription</h1>
+    <form action="/transcribe" method="post" enctype="multipart/form-data">
+        <label for="locale">Locale:</label>
+        <input type="text" name="locale" id="locale" value="de-DE"><br><br>
+        
+        <label for="file">Audio File:</label>
+        <input type="file" name="file" id="file"><br><br>
+
+        <label for="api_key">API Key:</label>
+        <input type="text" name="api_key" id="api_key"><br><br>
+
+        <input type="submit" value="Transcribe">
+    </form>
+</body>
+</html>

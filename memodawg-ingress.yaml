@@ -1,7 +1,7 @@
 apiVersion: networking.k8s.io/v1
 kind: Ingress
 metadata:
-  name: memodawg-api-ingress
+  name: memodawg-ingress
   namespace: memodawg
   annotations:
     kubernetes.io/ingress.class: traefik
@@ -11,13 +11,20 @@ spec:
   - host: memodawg.stillon.top
     http:
       paths:
-      - path: /
-        pathType: Prefix
+      - path: /transcribe
+        pathType: Exact
         backend:
           service:
             name: memodawg-api-service
             port:
               number: 5000
+      - path: /
+        pathType: Prefix
+        backend:
+          service:
+            name: memodawg-frontend-service
+            port:
+              number: 80
   tls:
   - hosts:
     - memodawg.stillon.top
