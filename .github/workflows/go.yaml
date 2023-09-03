@@ -6,20 +6,21 @@ jobs:
     name: Build
     runs-on: ubuntu-latest
     steps:
-
     - name: Checkout code
       uses: actions/checkout@v2
-
-    - name: Setup Go environment
+      
+    - name: Setup Go
       uses: actions/setup-go@v2
       with:
-        go-version: 1.17
+        go-version: '1.21' # Match the Go version with your go.work file
 
-    - name: Test api
-      run: go test /home/runner/work/memodawg/memodawg/api
+    - name: Run API Tests
+      working-directory: ./api
+      run: go test ./...
 
-    - name: Test frontend
-      run: go test ./frontend
+    - name: Run Frontend Tests
+      working-directory: ./frontend
+      run: go test ./...
 
     - name: Notify via Gotify if failed
       if: failure()
