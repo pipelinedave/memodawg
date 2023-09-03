@@ -3,12 +3,12 @@ package main
 import (
 	"bytes"
 	"encoding/json"
+	"fmt"
 	"io"
 	"io/ioutil"
 	"log"
 	"net/http"
 	"os"
-	"fmt"
 )
 
 // Create a struct that matches the JSON response structure
@@ -23,8 +23,32 @@ const tempAudioFile = "audio.wav"
 
 func main() {
 	log.Println("Starting memodawg-api...")
-	http.HandleFunc("/transcribe", transcribeHandler)
+	http.HandleFunc("/transcribe", apiKeyMiddleware(transcribeHandler))
 	log.Fatal(http.ListenAndServe(":5000", nil))
+}
+
+func apiKeyMiddleware(next http.HandlerFunc) http.HandlerFunc {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		apiKey := r.Header.Get("X-API-Key")
+		validKey := os.Getenv("MEMODAWG_KEY")
+
+		log.Printf("Received request for %s from %s", r.URL.Path, r.RemoteAddr)
+
+		if apiKey == "" {
+			log.Println("No API Key provided.")
+			http.Error(w, "Forbidden", http.StatusForbidden)
+			return
+		}
+
+		if apiKey != validKey {
+			log.Printf("Invalid API Key provided by %s", r.RemoteAddr)
+			http.Error(w, "Forbidden", http.StatusForbidden)
+			return
+		}
+
+		log.Printf("Valid API Key provided by %s", r.RemoteAddr)
+		next.ServeHTTP(w, r)
+	})
 }
 
 func transcribeHandler(w http.ResponseWriter, r *http.Request) {
@@ -39,6 +63,13 @@ func transcribeHandler(w http.ResponseWriter, r *http.Request) {
 	log.Printf("Request Method: %s\n", r.Method)
 	log.Printf("Request URL: %s\n", r.URL.String())
 	log.Printf("Request Headers: %v\n", r.Header)
+
+	// Get and also log the locale
+	locale := r.URL.Query().Get("locale")
+	if locale == "" {
+		locale = "de-DE" // default locale
+	}
+	log.Printf("Request Locale: %s", locale)
 
 	file, _, err := r.FormFile("file")
 	if err != nil {
@@ -72,7 +103,7 @@ func transcribeHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// Transcribe using Azure
-	transcription, err := transcribeWithAzure(token, azureSTTURL)
+	transcription, err := transcribeWithAzure(token, azureSTTURL, locale)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
@@ -134,7 +165,7 @@ func getAzureToken(azureSubscriptionKey, azureTokenURL string) (string, error) {
 	token := string(body)
 	if token == "" {
 		log.Println("Token is empty.")
-		return "", fmt.Errorf("Token is empty")
+		return "", fmt.Errorf("token is empty")
 	}
 
 	// Log the completion of the function (avoid logging the actual token in production)
@@ -142,9 +173,7 @@ func getAzureToken(azureSubscriptionKey, azureTokenURL string) (string, error) {
 	return token, nil
 }
 
-
-
-func transcribeWithAzure(token, azureSTTURL string) (string, error) {
+func transcribeWithAzure(token, azureSTTURL string, locale string) (string, error) {
 	// Log the start of the function
 	log.Println("Starting transcribeWithAzure function...")
 
@@ -157,7 +186,6 @@ func transcribeWithAzure(token, azureSTTURL string) (string, error) {
 	}
 
 	// Specify desired locale
-	locale := "de-DE"
 	fullURL := fmt.Sprintf("%s?language=%s", azureSTTURL, locale)
 
 	// Create a new HTTP request for Azure Speech-to-Text
@@ -212,7 +240,6 @@ func transcribeWithAzure(token, azureSTTURL string) (string, error) {
 	log.Printf("Transcription completed: %s", transcription)
 	return transcription, nil
 }
-
 
 func sendGotifyNotification(message, gotifyToken string) error {
 	// Log the start of the function
@@ -270,12 +297,10 @@ func sendGotifyNotification(message, gotifyToken string) error {
 	// Check if Gotify responded with a success status
 	if resp.StatusCode != http.StatusOK {
 		log.Printf("Gotify responded with non-OK status: %d", resp.StatusCode)
-		return fmt.Errorf("Gotify responded with non-OK status: %d", resp.StatusCode)
+		return fmt.Errorf("gotify responded with non-OK status: %d", resp.StatusCode)
 	}
 
 	// Successfully sent the notification
 	log.Println("Successfully sent the Gotify notification.")
 	return nil
 }
-
-

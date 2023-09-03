@@ -35,6 +35,11 @@ spec:
             secretKeyRef:
               name: memodawg-secret
               key: GOTIFY_TOKEN
+        - name: MEMODAWG_KEY
+          valueFrom:
+            secretKeyRef:
+              name: memodawg-secret
+              key: MEMODAWG_KEY
         resources:
           requests:
             memory: "512Mi"
