@@ -1,0 +1,11 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: memodawg-config
+  namespace: memodawg
+data:
+  AZURE_REGION: "germanywestcentral"
+  AZURE_STT_URL: "https://germanywestcentral.stt.speech.microsoft.com/speech/recognition/conversation/cognitiveservices/v1"
+  AZURE_TOKEN_URL: "https://germanywestcentral.api.cognitive.microsoft.com/sts/v1.0/issuetoken"
+  GOTIFY_URL: "http://gotify.gotify.svc.cluster.local/message"
+  TEMP_AUDIO_FILE: "/tmp/audio.wav"

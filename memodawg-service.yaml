@@ -1,0 +1,13 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: memodawg-api-service
+  namespace: memodawg
+spec:
+  selector:
+    app: memodawg
+    tier: api
+  ports:
+    - protocol: TCP
+      port: 5000
+      targetPort: 5000

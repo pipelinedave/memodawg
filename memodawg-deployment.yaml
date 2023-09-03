@@ -1,0 +1,44 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: memodawg-api
+  namespace: memodawg
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: memodawg
+      tier: api
+  template:
+    metadata:
+      labels:
+        app: memodawg
+        tier: api
+    spec:
+      containers:
+      - name: api
+        image: pipelinedave/memodawg-api:0.1.1
+        imagePullPolicy: Always
+        ports:
+        - containerPort: 5000
+        envFrom:
+        - configMapRef:
+            name: memodawg-config
+        env:
+        - name: AZURE_KEY
+          valueFrom:
+            secretKeyRef:
+              name: memodawg-secret
+              key: AZURE_KEY
+        - name: GOTIFY_TOKEN
+          valueFrom:
+            secretKeyRef:
+              name: memodawg-secret
+              key: GOTIFY_TOKEN
+        resources:
+          requests:
+            memory: "512Mi"
+            cpu: "250m"
+          limits:
+            memory: "1024Mi"
+            cpu: "500m"
