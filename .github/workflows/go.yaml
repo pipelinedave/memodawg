@@ -1,0 +1,42 @@
+name: Go CI
+on: [push]
+jobs:
+
+  build:
+    name: Build
+    runs-on: ubuntu-latest
+    steps:
+
+    - name: Checkout code
+      uses: actions/checkout@v2
+
+    - name: Setup Go environment
+      uses: actions/setup-go@v2
+      with:
+        go-version: 1.17
+
+    - name: Test
+      run: go test ./...
+
+    - name: Notify via Gotify if failed
+      if: failure()
+      run: curl -X POST "https://gotify.stillon.top/message?token=$GOTIFY_TOKEN" -F "title=CI/CD Failed" -F "message=Look into it."
+      env:
+        GOTIFY_TOKEN: ${{ secrets.GOTIFY_TOKEN }}
+
+    - name: Login to Docker Hub
+      uses: docker/login-action@v1
+      with:
+        username: ${{ secrets.DOCKER_HUB_USERNAME }}
+        password: ${{ secrets.DOCKER_HUB_ACCESS_TOKEN }}
+
+    - name: Build and push API Docker image
+      run: |
+        docker build -t ${{ secrets.DOCKER_HUB_USERNAME }}/memodawg-api:latest ./backend
+        docker push ${{ secrets.DOCKER_HUB_USERNAME }}/memodawg-api:latest
+
+    - name: Build and push Frontend Docker image
+      run: |
+        docker build -t ${{ secrets.DOCKER_HUB_USERNAME }}/memodawg-frontend:latest ./frontend
+        docker push ${{ secrets.DOCKER_HUB_USERNAME }}/memodawg-frontend:latest
+
