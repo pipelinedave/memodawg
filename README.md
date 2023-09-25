@@ -112,6 +112,3 @@ Feel free to open issues or pull requests to improve the project. All contributi
 ## License
 
 This project is licensed under the MIT License. See `LICENSE` for details.
-```
-
-You can append this content to the part that you already copied. If you have further requirements, let me know!
